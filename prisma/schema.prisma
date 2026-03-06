@@ -1,14 +1,69 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id             String         @id @default(cuid())
+  email          String         @unique
+  name           String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  healthProfile  HealthProfile?
+  symptomLogs    SymptomLog[]
+  appointments   Appointment[]
+}
+
+model HealthProfile {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  doshaType      String?   // Vata, Pitta, Kapha, or a combination
+  age            Int?
+  weight         Float?
+  height         Float?
+  lifestyle      String?   // Active, Sedentary, Moderate
+  diet           String?   // Vegetarian, Vegan, Mixed, Omnivore
+  chronicIssues  String?   // Comma-separated list
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model SymptomLog {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  symptoms       String    // The actual text input
+  aiGuidance     String?   // The AI generated Ayurvedic response
+  createdAt      DateTime  @default(now())
+}
+
+model Doctor {
+  id             String         @id @default(cuid())
+  name           String
+  specialty      String         // e.g., Panchakarma, Nadi Pariksha
+  location       String         // e.g., "Mumbai, India"
+  experience     Int            // Years of experience
+  bio            String?
+  image          String?
+  rating         Float          @default(4.5)
+  appointments   Appointment[]
+  createdAt      DateTime       @default(now())
+}
+
+model Appointment {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  doctorId       String
+  doctor         Doctor    @relation(fields: [doctorId], references: [id])
+  date           DateTime
+  status         String    @default("PENDING") // PENDING, CONFIRMED, CANCELLED, COMPLETED
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
