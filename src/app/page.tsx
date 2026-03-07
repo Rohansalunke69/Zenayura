@@ -1,29 +1,39 @@
 import Link from "next/link";
-import { ChevronDown, Phone } from "lucide-react";
+import { ChevronDown, Phone, Leaf } from "lucide-react";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-export default function PublicLanding() {
+export default async function PublicLanding() {
+  const session = await getServerSession(authOptions);
+
   return (
     <div className="flex flex-col min-h-screen bg-[#F8FFF8] font-sans selection:bg-[#2E7D32] selection:text-white">
       {/* 
         HERO SECTION + HEADER 
         Dark green background with rounded bottom corners.
       */}
-      <div className="relative bg-[#2E7D32] rounded-b-[3rem] md:rounded-b-[6rem] pb-32 md:pb-64 pt-6 px-6 md:px-12 flex flex-col items-center overflow-hidden">
+      <div id="home" className="relative bg-[#2E7D32] rounded-b-[3rem] md:rounded-b-[6rem] pb-32 md:pb-64 pt-6 px-6 md:px-12 flex flex-col items-center overflow-hidden">
         {/* Header / Nav */}
         <header className="w-full max-w-7xl flex items-center justify-between z-20">
           <div className="text-white text-2xl font-bold tracking-tight">
             Zenayura.
           </div>
           <nav className="hidden md:flex items-center gap-8 text-white/90 font-medium text-sm">
-            <Link href="#" className="hover:text-white transition">Home</Link>
-            <Link href="#" className="hover:text-white transition">About us</Link>
-            <Link href="#" className="hover:text-white transition">Contact us</Link>
-            <Link href="#" className="hover:text-white transition">Services</Link>
+            <Link href="#home" className="hover:text-white transition">Home</Link>
+            <Link href="#about" className="hover:text-white transition">About us</Link>
+            <a href="mailto:Zenayuva@gmail.com" className="hover:text-white transition">Contact us</a>
+            <Link href="#services" className="hover:text-white transition">Services</Link>
           </nav>
-          <div className="hidden md:block">
-            <Link href="/dashboard/ai-assistant" className="bg-white text-[#2E7D32] px-6 py-2.5 rounded-full font-semibold text-sm hover:bg-slate-50 transition shadow-sm">
-              Book Appointment
-            </Link>
+          <div className="hidden md:flex items-center gap-4">
+            {session ? (
+              <Link href="/dashboard/ai-assistant" className="bg-white text-[#2E7D32] px-6 py-2.5 rounded-full font-semibold text-sm hover:bg-slate-50 transition shadow-sm">
+                Open AI Health Assistant
+              </Link>
+            ) : (
+              <Link href="/sign-in" className="bg-white text-[#2E7D32] px-6 py-2.5 rounded-full font-semibold text-sm hover:bg-slate-50 transition shadow-sm">
+                Login / Sign Up
+              </Link>
+            )}
           </div>
         </header>
 
@@ -35,9 +45,15 @@ export default function PublicLanding() {
           <p className="text-white/80 text-base md:text-lg max-w-lg mb-8">
             Ayurvedic recovery is most focused in helping you discover your natural balance and most beautiful smile.
           </p>
-          <Link href="/dashboard/ai-assistant" className="bg-[#1f5c22] text-white px-8 py-3 rounded-full font-medium shadow-md hover:bg-[#1a4f1d] transition">
-            Book Appointment
-          </Link>
+          {session ? (
+            <Link href="/dashboard/ai-assistant" className="bg-[#1f5c22] text-white px-8 py-3 rounded-full font-medium shadow-md hover:bg-[#1a4f1d] transition">
+              Open AI Health Assistant
+            </Link>
+          ) : (
+            <Link href="/sign-in" className="bg-[#1f5c22] text-white px-8 py-3 rounded-full font-medium shadow-md hover:bg-[#1a4f1d] transition">
+              Login / Sign Up
+            </Link>
+          )}
         </div>
 
         {/* Hero Doctors Image Composition (Absolute positioned below text) */}
@@ -58,48 +74,39 @@ export default function PublicLanding() {
         </div>
       </div>
 
+
+
       {/* 
-        FLOATING APPOINTMENT BOOKING CARD
-        Pulls up over the dark green background.
+        FLOATING NAGPUR TOP DOCTORS TEXT
+        Subtle glassmorphism badge overlapping the hero section
       */}
-      <div className="w-full max-w-5xl mx-auto px-4 relative z-30 -mt-24 md:-mt-16">
-        <div className="bg-white rounded-2xl md:rounded-full shadow-xl shadow-green-900/5 p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-4 border border-slate-100">
+      <div id="about" className="w-full max-w-4xl mx-auto px-4 relative z-30 -mt-12 md:-mt-20 mb-20 flex justify-center">
+        <Link href={session ? "/dashboard/doctors" : "/sign-in"} className="group relative">
+          {/* Animated glow effect behind the text */}
+          <div className="absolute inset-0 bg-gradient-to-r from-green-300 to-[#2E7D32] rounded-full blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
 
-          <div className="flex flex-col w-full md:w-auto px-4 md:border-r border-slate-100">
-            <label className="text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Choose Services</label>
-            <div className="flex items-center justify-between gap-2 text-slate-800 font-medium cursor-pointer">
-              Dosha Balancing <ChevronDown className="w-4 h-4 text-slate-400" />
+          <div className="relative bg-white/95 backdrop-blur-xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-full px-8 md:px-12 py-5 md:py-6 flex items-center gap-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgb(0,0,0,0.12)]">
+            <div className="flex flex-col items-center justify-center">
+              <h2 className="text-2xl md:text-4xl font-extrabold text-slate-800 tracking-tight text-center">
+                Nagpur's Top <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2E7D32] to-[#4CAF50]">Doctors</span>
+              </h2>
+              {/* Animated underline */}
+              <div className="h-1 w-12 bg-green-200 rounded-full mt-2 group-hover:w-full group-hover:bg-[#2E7D32] transition-all duration-500 ease-out opacity-70"></div>
+            </div>
+
+            {/* Arrow icon */}
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-[#2E7D32] group-hover:bg-[#2E7D32] group-hover:text-white transition-colors duration-300 ml-2 hidden sm:flex shrink-0 shadow-sm">
+              <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
             </div>
           </div>
-
-          <div className="flex flex-col w-full md:w-auto px-4 md:border-r border-slate-100">
-            <label className="text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Choose Date</label>
-            <div className="flex items-center justify-between gap-2 text-slate-800 font-medium cursor-pointer">
-              DD/MM/YYYY <ChevronDown className="w-4 h-4 text-slate-400" />
-            </div>
-          </div>
-
-          <div className="flex flex-col w-full md:w-auto px-4">
-            <label className="text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Contact Number</label>
-            <div className="flex items-center gap-2 text-slate-800 font-medium">
-              <Phone className="w-3.5 h-3.5 text-slate-400" /> +91 968 727 9122
-            </div>
-          </div>
-
-          <div className="w-full md:w-auto px-2">
-            <Link href="/dashboard/ai-assistant" className="flex w-full md:w-auto justify-center rounded-full border-2 border-[#A5D6A7] text-[#2E7D32] px-6 py-2.5 font-semibold text-sm hover:bg-[#A5D6A7]/10 transition whitespace-nowrap">
-              Book Appointment
-            </Link>
-          </div>
-
-        </div>
+        </Link>
       </div>
 
       {/* 
         SERVICES SECTION 
         Dark Green solid background block
       */}
-      <div className="w-full bg-[#2E7D32] mt-32 py-24 px-6 md:px-12">
+      <div id="services" className="w-full bg-[#2E7D32] mt-32 py-24 px-6 md:px-12">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
 
           {/* Left Side: Headline & Text */}
@@ -137,48 +144,13 @@ export default function PublicLanding() {
         </div>
       </div>
 
-      {/* 
-        STATISTICS SECTION
-        White background, large circular dials
-      */}
-      <div className="w-full bg-white py-24 px-6">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
-
-          <div className="flex flex-col items-center">
-            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-8 border-[#A5D6A7] flex items-center justify-center bg-[#2E7D32] shadow-xl shadow-green-900/10 mb-6 relative overflow-hidden">
-              <div className="absolute inset-0 border-[6px] border-white rounded-full pointer-events-none"></div>
-              <span className="text-white text-3xl font-bold">67+</span>
-            </div>
-            <h3 className="font-bold text-[#2E7D32] text-lg mb-2">Qualified Doctors</h3>
-            <p className="text-slate-500 text-sm max-w-[200px]">Medical experts present in our clinic</p>
-          </div>
-
-          <div className="flex flex-col items-center">
-            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-8 border-[#A5D6A7] flex items-center justify-center bg-[#2E7D32] shadow-xl shadow-green-900/10 mb-6 relative overflow-hidden">
-              <div className="absolute inset-0 border-[6px] border-white rounded-full pointer-events-none"></div>
-              <span className="text-white text-3xl font-bold">99%</span>
-            </div>
-            <h3 className="font-bold text-[#2E7D32] text-lg mb-2">Recover Patients</h3>
-            <p className="text-slate-500 text-sm max-w-[200px]">Your life is more important to us for growth</p>
-          </div>
-
-          <div className="flex flex-col items-center">
-            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-8 border-[#A5D6A7] flex items-center justify-center bg-[#2E7D32] shadow-xl shadow-green-900/10 mb-6 relative overflow-hidden">
-              <div className="absolute inset-0 border-[6px] border-white rounded-full pointer-events-none"></div>
-              <span className="text-white text-3xl font-bold">98%</span>
-            </div>
-            <h3 className="font-bold text-[#2E7D32] text-lg mb-2">Satisfaction Rate</h3>
-            <p className="text-slate-500 text-sm max-w-[200px]">More than 10,000+ seats by our team</p>
-          </div>
-
-        </div>
-      </div>
+      {/* DELETED STATISTICS SECTION */}
 
       {/* 
         DOCTORS / EXPERTS CLOSING SECTION
         Bottom image showcase overlay.
       */}
-      <div className="w-full relative h-[400px] md:h-[500px] flex items-center justify-center overflow-hidden">
+      <div id="contact" className="w-full relative h-[400px] md:h-[500px] flex items-center justify-center overflow-hidden">
         {/* Using gradient and backdrop blur placeholder to represent the doctor photo showcase with 'Check out for more' text */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#2E7D32]/90 to-[#A5D6A7]/40 z-10 mix-blend-multiply"></div>
         <div className="absolute inset-0 z-0 flex items-end justify-center blur-[2px]">

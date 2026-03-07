@@ -1,51 +1,88 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getServerSession } from "next-auth/next";
+import { NextResponse } from "next/server";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
-// Mock user ID since Clerk is not fully configured
-const MOCK_USER_ID = "user_12345";
-
-export async function GET() {
+export async function GET(req: Request) {
     try {
+        const session = await getServerSession(authOptions);
+
+        if (!session || !session.user) {
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
+
         const profile = await prisma.healthProfile.findUnique({
-            where: { userId: MOCK_USER_ID },
+            where: {
+                userId: session.user.id
+            }
         });
 
-        return NextResponse.json(profile || {});
-    } catch (e: any) {
-        return NextResponse.json({ error: e.message }, { status: 500 });
+        if (!profile) {
+            return new NextResponse("Profile not found", { status: 404 });
+        }
+
+        return NextResponse.json(profile);
+    } catch (error) {
+        console.error("GET PROFILE ERROR:", error);
+        return new NextResponse("Internal server error", { status: 500 });
     }
 }
 
 export async function POST(req: Request) {
     try {
-        const body = await req.json();
-        const { doshaType, age, weight, height, lifestyle, diet, chronicIssues } = body;
+        const session = await getServerSession(authOptions);
 
+        if (!session || !session.user) {
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
+
+        const body = await req.json();
+
+        // Validating required fields loosely based on requirements
+        const {
+            fullName, age, gender, height, weight,
+            healthConcern, lifestyle, dietType
+        } = body;
+
+        if (!fullName || !age || !gender || !height || !weight || !healthConcern || !lifestyle || !dietType) {
+            return new NextResponse("Missing required fields", { status: 400 });
+        }
+
+        // Upsert the profile (in case user double-submits)
         const profile = await prisma.healthProfile.upsert({
-            where: { userId: MOCK_USER_ID },
+            where: {
+                userId: session.user.id
+            },
             update: {
-                doshaType,
-                age: age ? parseInt(age) : null,
-                weight: weight ? parseFloat(weight) : null,
-                height: height ? parseFloat(height) : null,
-                lifestyle,
-                diet,
-                chronicIssues
+                ...body,
+                age: Number(body.age),
+                height: Number(body.height),
+                weight: Number(body.weight)
             },
             create: {
-                user: { connect: { id: MOCK_USER_ID } },
-                doshaType,
-                age: age ? parseInt(age) : null,
-                weight: weight ? parseFloat(weight) : null,
-                height: height ? parseFloat(height) : null,
-                lifestyle,
-                diet,
-                chronicIssues
+                ...body,
+                age: Number(body.age),
+                height: Number(body.height),
+                weight: Number(body.weight),
+                userId: session.user.id
             }
         });
 
-        return NextResponse.json({ message: "Profile saved successfully", profile });
-    } catch (e: any) {
-        return NextResponse.json({ error: e.message }, { status: 500 });
+        // Also update the User model's name and picture if they differ
+        if (body.profilePictureUrl || body.fullName) {
+            const updateData: any = {};
+            if (body.fullName) updateData.name = body.fullName;
+            if (body.profilePictureUrl) updateData.profilePicture = body.profilePictureUrl;
+
+            await prisma.user.update({
+                where: { id: session.user.id },
+                data: updateData
+            });
+        }
+
+        return NextResponse.json(profile);
+    } catch (error) {
+        console.error("POST PROFILE ERROR:", error);
+        return new NextResponse("Internal server error", { status: 500 });
     }
 }

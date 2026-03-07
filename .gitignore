@@ -47,3 +47,7 @@ next-env.d.ts
 *.db-journal
 dev.db
 
+# antigravity protection
+antigravity-skills/
+antigravity_skills/
+antigravity skills/

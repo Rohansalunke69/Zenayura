@@ -42,3 +42,23 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: e.message }, { status: 500 });
     }
 }
+
+export async function PATCH(req: Request) {
+    try {
+        const body = await req.json();
+        const { appointmentId, status } = body;
+
+        if (!appointmentId || !status) {
+            return NextResponse.json({ error: "Appointment ID and status are required" }, { status: 400 });
+        }
+
+        const appointment = await prisma.appointment.update({
+            where: { id: appointmentId },
+            data: { status }
+        });
+
+        return NextResponse.json({ message: "Appointment status updated", appointment });
+    } catch (e: any) {
+        return NextResponse.json({ error: e.message }, { status: 500 });
+    }
+}

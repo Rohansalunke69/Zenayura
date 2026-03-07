@@ -8,62 +8,78 @@ datasource db {
 }
 
 model User {
-  id             String         @id @default(cuid())
+  id             String         @id @default(cuid()) @map("user_id")
   email          String         @unique
   name           String?
-  createdAt      DateTime       @default(now())
+  passwordHash   String?        @map("password_hash") // for manual signup
+  googleId       String?        @unique @map("google_id") // for Google login linking
+  profilePicture String?        @map("profile_picture")
+  authProvider   String         @default("email") @map("auth_provider") // "google" or "email"
+  role           String         @default("user") // "user" or "doctor"
+  createdAt      DateTime       @default(now()) @map("account_created_at")
   updatedAt      DateTime       @updatedAt
   healthProfile  HealthProfile?
   symptomLogs    SymptomLog[]
   appointments   Appointment[]
+  doctorProfile  Doctor?
 }
 
 model HealthProfile {
-  id             String    @id @default(cuid())
-  userId         String    @unique
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  doshaType      String?   // Vata, Pitta, Kapha, or a combination
-  age            Int?
-  weight         Float?
-  height         Float?
-  lifestyle      String?   // Active, Sedentary, Moderate
-  diet           String?   // Vegetarian, Vegan, Mixed, Omnivore
-  chronicIssues  String?   // Comma-separated list
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id                 String   @id @default(cuid())
+  userId             String   @unique @map("user_id")
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName           String   @map("full_name")
+  age                Int
+  gender             String
+  height             Float
+  weight             Float
+  healthConcern      String   @map("health_concern")
+  lifestyle          String
+  dietType           String   @map("diet_type")
+  allergies          String?
+  medicalConditions  String?  @map("medical_conditions")
+  profilePictureUrl  String?  @map("profile_picture_url")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
 }
 
 model SymptomLog {
-  id             String    @id @default(cuid())
-  userId         String
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  symptoms       String    // The actual text input
-  aiGuidance     String?   // The AI generated Ayurvedic response
-  createdAt      DateTime  @default(now())
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  symptoms   String // The actual text input
+  aiGuidance String? // The AI generated Ayurvedic response
+  createdAt  DateTime @default(now())
 }
 
 model Doctor {
-  id             String         @id @default(cuid())
-  name           String
-  specialty      String         // e.g., Panchakarma, Nadi Pariksha
-  location       String         // e.g., "Mumbai, India"
-  experience     Int            // Years of experience
-  bio            String?
-  image          String?
-  rating         Float          @default(4.5)
-  appointments   Appointment[]
-  createdAt      DateTime       @default(now())
+  id              String        @id @default(cuid())
+  userId          String?       @unique
+  user            User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String
+  specialty       String // e.g., Panchakarma, Nadi Pariksha
+  location        String // e.g., "Mumbai, India"
+  experience      Int // Years of experience
+  bio             String?
+  image           String?
+  rating          Float         @default(4.5)
+  consultationFee Float         @default(500)
+  timeSlots       String? // JSON array of strings
+  certifications  String?
+  contactInfo     String?
+  appointments    Appointment[]
+  createdAt       DateTime      @default(now())
 }
 
 model Appointment {
-  id             String    @id @default(cuid())
-  userId         String
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  doctorId       String
-  doctor         Doctor    @relation(fields: [doctorId], references: [id])
-  date           DateTime
-  status         String    @default("PENDING") // PENDING, CONFIRMED, CANCELLED, COMPLETED
-  notes          String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  doctorId  String
+  doctor    Doctor   @relation(fields: [doctorId], references: [id])
+  date      DateTime
+  status    String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED, COMPLETED
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
