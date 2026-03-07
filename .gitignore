@@ -51,3 +51,8 @@ dev.db
 antigravity-skills/
 antigravity_skills/
 antigravity skills/
+
+# Uploaded files
+public/uploads/
+public/uploads/*
+public/uploads/profiles/
