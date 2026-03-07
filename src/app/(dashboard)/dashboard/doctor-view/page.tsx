@@ -54,10 +54,10 @@ export default async function DoctorPortalPage({ searchParams }: { searchParams:
                                     <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Health Profile Data</span>
                                     {apt.user?.healthProfile ? (
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm font-medium text-slate-700">
-                                            <div><span className="text-slate-400 font-normal">Dosha:</span> {apt.user.healthProfile.doshaType || 'N/A'}</div>
+                                            <div><span className="text-slate-400 font-normal">Lifestyle:</span> {apt.user.healthProfile.lifestyle || 'N/A'}</div>
                                             <div><span className="text-slate-400 font-normal">Age:</span> {apt.user.healthProfile.age || 'N/A'}</div>
                                             <div><span className="text-slate-400 font-normal">Weight:</span> {apt.user.healthProfile.weight || 'N/A'}kg</div>
-                                            <div><span className="text-slate-400 font-normal">Diet:</span> {apt.user.healthProfile.diet || 'N/A'}</div>
+                                            <div><span className="text-slate-400 font-normal">Diet:</span> {apt.user.healthProfile.dietType || 'N/A'}</div>
                                         </div>
                                     ) : (
                                         <span className="text-sm text-slate-500 italic">No health profile provided yet.</span>

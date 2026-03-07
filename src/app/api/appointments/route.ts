@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
-// Mock user ID since Clerk is not fully configured
-const MOCK_USER_ID = "user_12345";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 export async function GET() {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         const appointments = await prisma.appointment.findMany({
-            where: { userId: MOCK_USER_ID },
+            where: { userId: session.user.id },
             include: { doctor: true },
             orderBy: { date: 'desc' }
         });
@@ -20,6 +24,11 @@ export async function GET() {
 
 export async function POST(req: Request) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         const body = await req.json();
         const { doctorId, date } = body;
 
@@ -29,10 +38,10 @@ export async function POST(req: Request) {
 
         const appointment = await prisma.appointment.create({
             data: {
-                user: { connect: { id: MOCK_USER_ID } },
+                user: { connect: { id: session.user.id } },
                 doctor: { connect: { id: doctorId } },
                 date: new Date(date),
-                status: "Pending"
+                status: "PENDING"
             },
             include: { doctor: true }
         });
@@ -45,6 +54,11 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         const body = await req.json();
         const { appointmentId, status } = body;
 

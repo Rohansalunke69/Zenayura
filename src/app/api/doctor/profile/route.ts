@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
-// Mock Clerk User ID for the Doctor
-const MOCK_DOCTOR_USER_ID = "doctor_12345";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 export async function GET() {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         const doctor = await prisma.doctor.findUnique({
-            where: { userId: MOCK_DOCTOR_USER_ID },
+            where: { userId: session.user.id },
         });
 
         return NextResponse.json(doctor || {});
@@ -18,11 +22,16 @@ export async function GET() {
 
 export async function POST(req: Request) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         const body = await req.json();
         const { name, specialty, location, experience, bio, consultationFee, certifications, contactInfo, timeSlots } = body;
 
         const doctor = await prisma.doctor.upsert({
-            where: { userId: MOCK_DOCTOR_USER_ID },
+            where: { userId: session.user.id },
             update: {
                 name,
                 specialty,
@@ -35,7 +44,7 @@ export async function POST(req: Request) {
                 timeSlots
             },
             create: {
-                user: { connect: { id: MOCK_DOCTOR_USER_ID } },
+                user: { connect: { id: session.user.id } },
                 name: name || "New Doctor",
                 specialty: specialty || "General Ayurveda",
                 location: location || "Online",

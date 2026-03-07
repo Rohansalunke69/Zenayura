@@ -16,6 +16,9 @@ export function DoctorsClient({ doctors }: { doctors: any[] }) {
 
     // Filtered Doctors
     const filteredDoctors = doctors.filter(doc => {
+        // ONLY SHOW APPROVED DOCTORS
+        if (doc.verificationStatus !== "APPROVED") return false;
+
         const matchesSearch = doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             doc.location.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesSpecialty = specialtyFilter === "" || doc.specialty === specialtyFilter;

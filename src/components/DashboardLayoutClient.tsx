@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Leaf, Search, Calendar, UserCircle } from "lucide-react";
+import { Leaf, Search, Calendar, UserCircle, Briefcase, LogOut } from "lucide-react";
+
+import { useSession, signOut } from "next-auth/react";
 
 export function DashboardLayoutClient({
     children,
@@ -10,14 +12,19 @@ export function DashboardLayoutClient({
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
+    const { data: session } = useSession();
 
     const links = [
         { href: "/dashboard/ai-assistant", label: "Ayurvedic AI", icon: Leaf },
         { href: "/dashboard/doctors", label: "Find Doctors", icon: Search },
         { href: "/dashboard/appointments", label: "Appointments", icon: Calendar },
-        { href: "/dashboard/doctor-view", label: "Doctor Portal", icon: UserCircle },
         { href: "/dashboard/profile", label: "My Profile", icon: UserCircle },
     ];
+
+    // Conditionally add Doctor Portal if the user has the doctor role
+    if (session?.user?.role === "doctor") {
+        links.splice(3, 0, { href: "/doctor-portal", label: "Doctor Portal", icon: Briefcase });
+    }
 
     return (
         <div className="relative flex min-h-screen w-full bg-[#f4f9f4] overflow-hidden font-sans">
@@ -55,11 +62,24 @@ export function DashboardLayoutClient({
                         })}
                     </nav>
                 </div>
-                {/* Bottom Left Avatar */}
-                <div className="p-6">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#3a4f41] text-white font-medium shadow-md text-lg">
-                        N
+                {/* Bottom Profile & Logout */}
+                <div className="p-6 mt-auto flex flex-col gap-3 border-t border-[#e2efe2]/50">
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3a4f41] text-white font-medium shadow-md text-[15px]">
+                            {session?.user?.name?.charAt(0) || "U"}
+                        </div>
+                        <div className="flex flex-col overflow-hidden">
+                            <span className="text-sm font-bold text-slate-700 truncate">{session?.user?.name || "User"}</span>
+                            <span className="text-[11px] text-slate-500 truncate">{session?.user?.email}</span>
+                        </div>
                     </div>
+                    <button
+                        onClick={() => signOut({ callbackUrl: "/sign-in" })}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors mt-2"
+                    >
+                        <LogOut className="h-4 w-4" />
+                        Log out
+                    </button>
                 </div>
             </aside>
 
@@ -70,9 +90,13 @@ export function DashboardLayoutClient({
                     <div className="font-semibold text-lg flex items-center gap-2 text-[#2E7D32]">
                         <Leaf className="w-5 h-5" /> Zenayura
                     </div>
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#3a4f41] text-white font-medium text-sm">
-                        N
-                    </div>
+                    <button
+                        onClick={() => signOut({ callbackUrl: "/sign-in" })}
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-[#3a4f41] text-white font-medium text-sm hover:bg-red-600 transition-colors"
+                        title="Log Out"
+                    >
+                        <LogOut className="h-4 w-4" />
+                    </button>
                 </header>
 
                 <main className="flex-1 p-4 sm:p-8 md:p-10 h-screen overflow-hidden flex flex-col">

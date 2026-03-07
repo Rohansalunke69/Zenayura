@@ -2,14 +2,19 @@ import { prisma } from "@/lib/prisma";
 import { Stethoscope, Calendar, Clock, User, CheckCircle, XCircle } from "lucide-react";
 import { redirect } from "next/navigation";
 import { AppointmentActions } from "./AppointmentActions";
-
-// Mock Clerk User ID for the Doctor
-const MOCK_DOCTOR_USER_ID = "doctor_12345";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 export default async function DoctorPortalDashboard() {
+    const session = await getServerSession(authOptions);
+
+    if (!session || !session.user || session.user.role !== "doctor") {
+        redirect("/dashboard");
+    }
+
     // Attempt to find the doctor profile linked to this user
     const doctor = await prisma.doctor.findUnique({
-        where: { userId: MOCK_DOCTOR_USER_ID }
+        where: { userId: session.user.id }
     });
 
     if (!doctor) {
@@ -65,10 +70,10 @@ export default async function DoctorPortalDashboard() {
                                     <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Health Profile Data</span>
                                     {apt.user?.healthProfile ? (
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm font-medium text-slate-700">
-                                            <div><span className="text-slate-400 font-normal">Dosha:</span> {apt.user.healthProfile.doshaType || 'N/A'}</div>
+                                            <div><span className="text-slate-400 font-normal">Lifestyle:</span> {apt.user.healthProfile.lifestyle || 'N/A'}</div>
                                             <div><span className="text-slate-400 font-normal">Age:</span> {apt.user.healthProfile.age || 'N/A'}</div>
                                             <div><span className="text-slate-400 font-normal">Weight:</span> {apt.user.healthProfile.weight || 'N/A'}kg</div>
-                                            <div><span className="text-slate-400 font-normal">Diet:</span> {apt.user.healthProfile.diet || 'N/A'}</div>
+                                            <div><span className="text-slate-400 font-normal">Diet:</span> {apt.user.healthProfile.dietType || 'N/A'}</div>
                                         </div>
                                     ) : (
                                         <span className="text-sm text-slate-500 italic">No health profile provided yet.</span>

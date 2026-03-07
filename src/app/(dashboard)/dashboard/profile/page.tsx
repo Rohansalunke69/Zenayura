@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 import Link from "next/link";
-import { Activity, Apple, Scale, Calendar, Flame, AlertCircle, TestTube, ArrowUpRight, Edit3 } from "lucide-react";
+import { Activity, Apple, Scale, Calendar, Flame, AlertCircle, TestTube, ArrowUpRight, Edit3, Briefcase } from "lucide-react";
 
 export default async function ProfileView() {
     const session = await getServerSession(authOptions);
@@ -165,6 +165,30 @@ export default async function ProfileView() {
                         </div>
                     </div>
                 </div>
+
+                {/* Doctor Onboarding CTA */}
+                {session.user.role !== "doctor" && (
+                    <div className="bg-gradient-to-br from-[#2E7D32] to-[#1b5e20] rounded-2xl shadow-lg border border-[#355f41] p-8 md:col-span-3 mt-6 text-white relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div>
+                                <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                                    <Briefcase className="w-6 h-6" /> Are you an Ayurvedic Practitioner?
+                                </h2>
+                                <p className="text-white/90 text-lg max-w-2xl">
+                                    Join the Zenayura network to manage consultations, build your digital clinic, and connect with patients seeking authentic Ayurvedic healing.
+                                </p>
+                            </div>
+                            <Link
+                                href="/become-doctor"
+                                className="whitespace-nowrap inline-flex items-center justify-center gap-2 bg-white text-[#2E7D32] hover:bg-[#f4f9f4] transition px-8 py-3 rounded-xl font-bold text-lg shadow-xl"
+                            >
+                                Become a Doctor
+                                <ArrowUpRight className="w-5 h-5" />
+                            </Link>
+                        </div>
+                    </div>
+                )}
 
             </div>
         </div>

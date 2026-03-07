@@ -1,9 +1,14 @@
 import { getServerSession } from "next-auth/next";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
-import { writeFile } from "fs/promises";
-import path from "path";
-import { v4 as uuidv4 } from "uuid";
+import { v2 as cloudinary } from 'cloudinary';
+
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function POST(req: Request) {
     try {
@@ -20,10 +25,10 @@ export async function POST(req: Request) {
             return new NextResponse("No file provided", { status: 400 });
         }
 
-        // Validate type
-        const validTypes = ["image/jpeg", "image/png", "image/webp"];
+        // Validate type (Extended to allow PDFs since these are documents too)
+        const validTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
         if (!validTypes.includes(file.type)) {
-            return new NextResponse("Invalid file type. Only JPG, PNG, and WEBP are allowed.", { status: 400 });
+            return new NextResponse("Invalid file type. Only JPG, PNG, WEBP, and PDF are allowed.", { status: 400 });
         }
 
         // Validate size (5MB limit)
@@ -31,18 +36,34 @@ export async function POST(req: Request) {
             return new NextResponse("File too large. Maximum size is 5MB.", { status: 400 });
         }
 
-        const buffer = Buffer.from(await file.arrayBuffer());
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
 
-        // Generate a unique filename
-        const ext = file.name.split('.').pop() || 'png';
-        const filename = `${session.user.id}_${uuidv4()}.${ext}`;
-        const relativePath = `/uploads/profiles/${filename}`;
+        // Upload to Cloudinary using a stream
+        const result = await new Promise((resolve, reject) => {
+            const uploadStream = cloudinary.uploader.upload_stream(
+                {
+                    folder: 'doctor_verifications', // Save all documents in a specific folder
+                    format: file.type === "application/pdf" ? "pdf" : undefined // Preserve PDF format if it is one
+                },
+                (error, result) => {
+                    if (error) reject(error);
+                    else resolve(result);
+                }
+            );
 
-        // Save to public dir
-        const uploadDir = path.join(process.cwd(), "public", "uploads", "profiles");
-        await writeFile(path.join(uploadDir, filename), buffer);
+            // Give the buffer to the stream and finish
+            uploadStream.end(buffer);
+        });
 
-        return NextResponse.json({ url: relativePath });
+        // @ts-ignore
+        const secureUrl = result?.secure_url;
+
+        if (!secureUrl) {
+            throw new Error("Failed to get secure URL from Cloudinary");
+        }
+
+        return NextResponse.json({ url: secureUrl });
 
     } catch (error) {
         console.error("UPLOAD ERROR:", error);

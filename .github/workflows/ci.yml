@@ -1,0 +1,43 @@
+name: Zenayura CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build_and_test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run Linter
+        run: npm run lint
+
+      - name: Build Next.js Application
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          # Dummy values for build-time checks if needed
+          NEXTAUTH_URL: http://localhost:3000
+          NEXTAUTH_SECRET: ci-dummy-secret
+
+      - name: Verify Docker Image Build
+        run: |
+          docker build -t zenayura-app:test .

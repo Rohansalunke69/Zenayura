@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -60,15 +60,30 @@ model Doctor {
   specialty       String // e.g., Panchakarma, Nadi Pariksha
   location        String // e.g., "Mumbai, India"
   experience      Int // Years of experience
-  bio             String?
-  image           String?
-  rating          Float         @default(4.5)
-  consultationFee Float         @default(500)
-  timeSlots       String? // JSON array of strings
-  certifications  String?
-  contactInfo     String?
-  appointments    Appointment[]
-  createdAt       DateTime      @default(now())
+  bio                String?
+  image              String? // Profile Photo
+  rating             Float         @default(4.5)
+  consultationFee    Float         @default(500)
+  timeSlots          String? // JSON array of strings
+  contactInfo        String?
+
+  // NEW Professional & Clinic Information
+  licenseNumber      String?
+  registrationNumber String?
+  clinicName         String?
+  clinicAddress      String?
+
+  // NEW Documents (Store file URLs)
+  degreeCertificate  String? 
+  governmentId       String?
+  licenseDocument    String?
+
+  // NEW Verification System
+  verificationStatus String        @default("PENDING") // "PENDING", "APPROVED", "REJECTED"
+  verifiedAt         DateTime?
+
+  appointments       Appointment[]
+  createdAt          DateTime      @default(now())
 }
 
 model Appointment {
