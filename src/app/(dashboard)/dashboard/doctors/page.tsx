@@ -31,9 +31,6 @@ export default async function DoctorsPage() {
                     <h1 className="text-[28px] font-bold text-[#355f41]">Find Ayurvedic Doctors</h1>
                     <p className="text-[#598b61] text-sm mt-1">Discover and book real Ayurvedic practitioners from the database.</p>
                 </div>
-                <div className="hidden sm:flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 font-semibold shadow-sm text-sm shrink-0">
-                    ME
-                </div>
             </div>
 
             {/* Container */}

@@ -3,15 +3,21 @@ import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { v2 as cloudinary } from 'cloudinary';
 
-// Configure Cloudinary
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+// We will actively configure Cloudinary inside the route handler to ensure Vercel runtime picks up process.env
 
 export async function POST(req: Request) {
     try {
+        // Debug Logs for Vercel
+        console.log("DEBUG: CLOUDINARY_CLOUD_NAME exists:", !!process.env.CLOUDINARY_CLOUD_NAME);
+        console.log("DEBUG: CLOUDINARY_API_KEY exists:", !!process.env.CLOUDINARY_API_KEY);
+
+        // Configure Cloudinary synchronously inside the runtime handler
+        cloudinary.config({
+            cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+            api_key: process.env.CLOUDINARY_API_KEY,
+            api_secret: process.env.CLOUDINARY_API_SECRET,
+        });
+
         const session = await getServerSession(authOptions);
 
         if (!session || !session.user) {

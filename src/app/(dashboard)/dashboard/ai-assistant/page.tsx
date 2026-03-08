@@ -77,9 +77,6 @@ export default function AIAssistantPage() {
             {/* Header */}
             <div className="flex items-center justify-between mb-2">
                 <h1 className="text-[28px] font-bold text-[#355f41]">AI Health Assistant</h1>
-                <div className="hidden sm:flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 font-semibold shadow-sm text-sm">
-                    ME
-                </div>
             </div>
 
             {/* Chat Container */}
