@@ -5,6 +5,14 @@ import { authOptions } from "@/lib/auth";
 
 export async function GET(req: Request) {
     try {
+        // Check for admin secret in headers or query params
+        const { searchParams } = new URL(req.url);
+        const secret = req.headers.get('x-admin-key') || searchParams.get('secret');
+
+        if (!secret || secret !== process.env.ADMIN_SECRET) {
+            return NextResponse.json({ error: "Unauthorized. Invalid or missing admin key." }, { status: 403 });
+        }
+
         const session = await getServerSession(authOptions);
 
         if (!session || !session.user) {
@@ -29,6 +37,6 @@ export async function GET(req: Request) {
 
     } catch (e: any) {
         console.error("Error making admin:", e);
-        return NextResponse.json({ error: e.message || "An error occurred" }, { status: 500 });
+        return NextResponse.json({ error: "An internal error occurred" }, { status: 500 });
     }
 }

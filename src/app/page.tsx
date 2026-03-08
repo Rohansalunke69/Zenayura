@@ -30,9 +30,14 @@ export default async function PublicLanding() {
                 Open AI Health Assistant
               </Link>
             ) : (
-              <Link href="/sign-in" className="bg-white text-[#2E7D32] px-6 py-2.5 rounded-full font-semibold text-sm hover:bg-slate-50 transition shadow-sm">
-                Login / Sign Up
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link href="/auth/login" className="text-white hover:text-white/80 font-semibold text-sm transition">
+                  Login
+                </Link>
+                <Link href="/auth/signup" className="bg-white text-[#2E7D32] px-6 py-2.5 rounded-full font-semibold text-sm hover:bg-slate-50 transition shadow-sm">
+                  Get Started
+                </Link>
+              </div>
             )}
           </div>
         </header>
@@ -50,9 +55,14 @@ export default async function PublicLanding() {
               Open AI Health Assistant
             </Link>
           ) : (
-            <Link href="/sign-in" className="bg-[#1f5c22] text-white px-8 py-3 rounded-full font-medium shadow-md hover:bg-[#1a4f1d] transition">
-              Login / Sign Up
-            </Link>
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <Link href="/auth/signup" className="bg-white text-[#2E7D32] px-8 py-3 rounded-full font-bold shadow-xl hover:scale-105 active:scale-95 transition-all">
+                Get Started
+              </Link>
+              <Link href="/auth/login" className="bg-[#1f5c22] text-white px-8 py-3 rounded-full font-medium shadow-md hover:bg-[#1a4f1d] hover:scale-105 active:scale-95 transition-all">
+                Login
+              </Link>
+            </div>
           )}
         </div>
 
@@ -81,7 +91,7 @@ export default async function PublicLanding() {
         Subtle glassmorphism badge overlapping the hero section
       */}
       <div id="about" className="w-full max-w-4xl mx-auto px-4 relative z-30 -mt-12 md:-mt-20 mb-20 flex justify-center">
-        <Link href={session ? "/dashboard/doctors" : "/sign-in"} className="group relative">
+        <Link href={session ? "/dashboard/doctors" : "/auth/login"} className="group relative">
           {/* Animated glow effect behind the text */}
           <div className="absolute inset-0 bg-gradient-to-r from-green-300 to-[#2E7D32] rounded-full blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
 

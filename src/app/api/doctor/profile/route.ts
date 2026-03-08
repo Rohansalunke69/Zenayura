@@ -16,7 +16,8 @@ export async function GET() {
 
         return NextResponse.json(doctor || {});
     } catch (e: any) {
-        return NextResponse.json({ error: e.message }, { status: 500 });
+        console.error("Profile GET Error:", e);
+        return NextResponse.json({ error: "An internal error occurred" }, { status: 500 });
     }
 }
 
@@ -28,7 +29,19 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { name, specialty, location, experience, bio, consultationFee, certifications, contactInfo, timeSlots } = body;
+        const { name, specialty, location, experience, bio, consultationFee, contactInfo, timeSlots } = body;
+
+        // Basic validation
+        const parsedExperience = parseInt(experience);
+        const parsedFee = parseFloat(consultationFee);
+
+        if (experience !== undefined && isNaN(parsedExperience)) {
+            return NextResponse.json({ error: "Invalid experience value" }, { status: 400 });
+        }
+        if (consultationFee !== undefined && isNaN(parsedFee)) {
+            return NextResponse.json({ error: "Invalid consultation fee value" }, { status: 400 });
+        }
+
 
         const doctor = await prisma.doctor.upsert({
             where: { userId: session.user.id },
@@ -36,10 +49,9 @@ export async function POST(req: Request) {
                 name,
                 specialty,
                 location,
-                experience: parseInt(experience),
+                experience: isNaN(parsedExperience) ? 0 : parsedExperience,
                 bio,
-                consultationFee: parseFloat(consultationFee),
-                certifications,
+                consultationFee: isNaN(parsedFee) ? 500 : parsedFee,
                 contactInfo,
                 timeSlots
             },
@@ -48,10 +60,9 @@ export async function POST(req: Request) {
                 name: name || "New Doctor",
                 specialty: specialty || "General Ayurveda",
                 location: location || "Online",
-                experience: parseInt(experience) || 0,
+                experience: isNaN(parsedExperience) ? 0 : parsedExperience,
                 bio,
-                consultationFee: parseFloat(consultationFee) || 500,
-                certifications,
+                consultationFee: isNaN(parsedFee) ? 500 : parsedFee,
                 contactInfo,
                 timeSlots
             }
@@ -59,6 +70,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ message: "Profile saved successfully", doctor });
     } catch (e: any) {
-        return NextResponse.json({ error: e.message }, { status: 500 });
+        console.error("Profile POST Error:", e);
+        return NextResponse.json({ error: "An internal error occurred" }, { status: 500 });
     }
 }

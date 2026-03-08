@@ -10,7 +10,7 @@ export default async function ProfileView() {
     const session = await getServerSession(authOptions);
 
     if (!session || !session.user) {
-        redirect("/sign-in");
+        redirect("/auth/login");
     }
 
     const profile = await prisma.healthProfile.findUnique({

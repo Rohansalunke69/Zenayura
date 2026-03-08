@@ -6,9 +6,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Leaf } from "lucide-react";
 
-export default function SignUp() {
+export default function SignIn() {
     const router = useRouter();
-    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -19,38 +18,18 @@ export default function SignUp() {
         setLoading(true);
         setError("");
 
-        try {
-            // Create user
-            const res = await fetch("/api/auth/register", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email, password }),
-            });
+        const res = await signIn("credentials", {
+            redirect: false,
+            email,
+            password,
+        });
 
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.message || "Something went wrong");
-            }
-
-            // Automatically sign in upon successful registration
-            const authRes = await signIn("credentials", {
-                redirect: false,
-                email,
-                password,
-            });
-
-            if (authRes?.error) {
-                throw new Error("Login failed after registration");
-            }
-
+        if (res?.error) {
+            setError("Invalid email or password");
+            setLoading(false);
+        } else {
             router.push("/");
             router.refresh();
-
-        } catch (err: any) {
-            setError(err.message || "Registration failed");
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -63,15 +42,15 @@ export default function SignUp() {
                     </div>
                 </div>
                 <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                    Create an account
+                    Sign in to Zenayura
                 </h2>
                 <p className="mt-2 text-center text-sm text-gray-600">
-                    Already have an account?{" "}
+                    Or{" "}
                     <Link
-                        href="/sign-in"
+                        href="/auth/signup"
                         className="font-medium text-[#2E7D32] hover:text-[#1b5e20] transition-colors"
                     >
-                        Sign in
+                        create a new account
                     </Link>
                 </p>
             </div>
@@ -84,28 +63,6 @@ export default function SignUp() {
                                 {error}
                             </div>
                         )}
-
-                        <div>
-                            <label
-                                htmlFor="name"
-                                className="block text-sm font-medium text-gray-700"
-                            >
-                                Full Name
-                            </label>
-                            <div className="mt-1">
-                                <input
-                                    id="name"
-                                    name="name"
-                                    type="text"
-                                    autoComplete="name"
-                                    required
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#2E7D32] focus:border-[#2E7D32] sm:text-sm transition-colors"
-                                />
-                            </div>
-                        </div>
-
                         <div>
                             <label
                                 htmlFor="email"
@@ -139,7 +96,7 @@ export default function SignUp() {
                                     id="password"
                                     name="password"
                                     type="password"
-                                    autoComplete="new-password"
+                                    autoComplete="current-password"
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
@@ -154,7 +111,7 @@ export default function SignUp() {
                                 disabled={loading}
                                 className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#2E7D32] hover:bg-[#1b5e20] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2E7D32] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
-                                {loading ? "Creating account..." : "Create account"}
+                                {loading ? "Signing in..." : "Sign in"}
                             </button>
                         </div>
                     </form>

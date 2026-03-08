@@ -18,7 +18,8 @@ export async function GET() {
 
         return NextResponse.json({ appointments });
     } catch (e: any) {
-        return NextResponse.json({ error: e.message }, { status: 500 });
+        console.error("Appointment GET Error:", e);
+        return NextResponse.json({ error: "An internal error occurred" }, { status: 500 });
     }
 }
 
@@ -36,11 +37,16 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Doctor ID and date are required" }, { status: 400 });
         }
 
+        const appointmentDate = new Date(date);
+        if (isNaN(appointmentDate.getTime())) {
+            return NextResponse.json({ error: "Invalid date format provided for appointment" }, { status: 400 });
+        }
+
         const appointment = await prisma.appointment.create({
             data: {
                 user: { connect: { id: session.user.id } },
                 doctor: { connect: { id: doctorId } },
-                date: new Date(date),
+                date: appointmentDate,
                 status: "PENDING"
             },
             include: { doctor: true }
@@ -48,7 +54,8 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ message: "Appointment booked successfully", appointment });
     } catch (e: any) {
-        return NextResponse.json({ error: e.message }, { status: 500 });
+        console.error("Appointment POST Error:", e);
+        return NextResponse.json({ error: "An internal error occurred" }, { status: 500 });
     }
 }
 
@@ -59,11 +66,36 @@ export async function PATCH(req: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
+        if (session.user.role !== "doctor") {
+            return NextResponse.json({ error: "Forbidden: Only doctors can update appointments" }, { status: 403 });
+        }
+
         const body = await req.json();
         const { appointmentId, status } = body;
 
         if (!appointmentId || !status) {
             return NextResponse.json({ error: "Appointment ID and status are required" }, { status: 400 });
+        }
+
+        // Verify that this doctor owns this appointment
+        const doctor = await prisma.doctor.findUnique({
+            where: { userId: session.user.id }
+        });
+
+        if (!doctor) {
+            return NextResponse.json({ error: "Doctor profile not found" }, { status: 404 });
+        }
+
+        const existingAppointment = await prisma.appointment.findUnique({
+            where: { id: appointmentId }
+        });
+
+        if (!existingAppointment) {
+            return NextResponse.json({ error: "Appointment not found" }, { status: 404 });
+        }
+
+        if (existingAppointment.doctorId !== doctor.id) {
+            return NextResponse.json({ error: "Forbidden: You are not authorized to update this appointment" }, { status: 403 });
         }
 
         const appointment = await prisma.appointment.update({
@@ -73,6 +105,8 @@ export async function PATCH(req: Request) {
 
         return NextResponse.json({ message: "Appointment status updated", appointment });
     } catch (e: any) {
-        return NextResponse.json({ error: e.message }, { status: 500 });
+        // Safe error handling, avoid exposing raw errors
+        console.error("Appointment Update Error:", e);
+        return NextResponse.json({ error: "An internal error occurred" }, { status: 500 });
     }
 }

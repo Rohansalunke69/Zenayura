@@ -6,6 +6,13 @@ export default withAuth(
         const { token } = req.nextauth;
         const { pathname } = req.nextUrl;
 
+        // Redirect logged-in users away from auth pages to dashboard
+        if (pathname.startsWith("/auth/login") || pathname.startsWith("/auth/signup") || pathname === "/auth") {
+            if (token) {
+                return NextResponse.redirect(new URL("/dashboard", req.url));
+            }
+        }
+
         // Admin Role-Based redirection logic
         if (pathname.startsWith("/dashboard/admin") && token?.role !== "admin") {
             return NextResponse.redirect(new URL("/dashboard", req.url));
@@ -24,11 +31,11 @@ export default withAuth(
             authorized: ({ token }) => !!token,
         },
         pages: {
-            signIn: "/sign-in",
+            signIn: "/auth/login",
         },
     }
 );
 
 export const config = {
-    matcher: ["/dashboard/:path*", "/doctor-portal/:path*"],
+    matcher: ["/dashboard/:path*", "/doctor-portal/:path*", "/appointments/:path*", "/auth/:path*"],
 };

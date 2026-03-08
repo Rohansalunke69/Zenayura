@@ -74,7 +74,7 @@ export function DashboardLayoutClient({
                         </div>
                     </div>
                     <button
-                        onClick={() => signOut({ callbackUrl: "/sign-in" })}
+                        onClick={() => signOut({ callbackUrl: "/auth/login" })}
                         className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors mt-2"
                     >
                         <LogOut className="h-4 w-4" />
@@ -91,7 +91,7 @@ export function DashboardLayoutClient({
                         <Leaf className="w-5 h-5" /> Zenayura
                     </div>
                     <button
-                        onClick={() => signOut({ callbackUrl: "/sign-in" })}
+                        onClick={() => signOut({ callbackUrl: "/auth/login" })}
                         className="flex h-9 w-9 items-center justify-center rounded-full bg-[#3a4f41] text-white font-medium text-sm hover:bg-red-600 transition-colors"
                         title="Log Out"
                     >

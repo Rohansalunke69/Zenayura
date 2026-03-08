@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { verifyDoctorApplication, VERIFICATION_STATUS } from "@/services/doctorVerificationService";
 
 export async function POST(req: Request) {
     try {
@@ -17,16 +18,28 @@ export async function POST(req: Request) {
             degreeCertificate, governmentId, licenseDocument
         } = body;
 
-        // Upsert the Doctor Profile with PENDING status
+        const parsedExperience = parseInt(experience);
+        const parsedFee = parseFloat(consultationFee);
+
+        if (experience !== undefined && isNaN(parsedExperience)) {
+            return NextResponse.json({ error: "Invalid experience value. Must be a number." }, { status: 400 });
+        }
+        if (consultationFee !== undefined && isNaN(parsedFee)) {
+            return NextResponse.json({ error: "Invalid consultation fee value. Must be a number." }, { status: 400 });
+        }
+
+        const verificationResult = await verifyDoctorApplication(body, session.user.id);
+
+        // Upsert the Doctor Profile with the calculated verification status
         const doctor = await prisma.doctor.upsert({
             where: { userId: session.user.id },
             update: {
                 name,
                 specialty,
                 location: location || clinicAddress,
-                experience: parseInt(experience) || 0,
+                experience: isNaN(parsedExperience) ? 0 : parsedExperience,
                 bio,
-                consultationFee: parseFloat(consultationFee) || 500,
+                consultationFee: isNaN(parsedFee) ? 500 : parsedFee,
                 contactInfo,
                 timeSlots,
                 licenseNumber,
@@ -36,16 +49,16 @@ export async function POST(req: Request) {
                 degreeCertificate,
                 governmentId,
                 licenseDocument,
-                verificationStatus: 'PENDING'
+                verificationStatus: verificationResult.status
             },
             create: {
                 user: { connect: { id: session.user.id } },
                 name: name || session.user.name || "New Doctor",
                 specialty: specialty || "General Ayurveda",
                 location: location || clinicAddress || "Online",
-                experience: parseInt(experience) || 0,
+                experience: isNaN(parsedExperience) ? 0 : parsedExperience,
                 bio,
-                consultationFee: parseFloat(consultationFee) || 500,
+                consultationFee: isNaN(parsedFee) ? 500 : parsedFee,
                 contactInfo,
                 timeSlots,
                 licenseNumber,
@@ -55,21 +68,31 @@ export async function POST(req: Request) {
                 degreeCertificate,
                 governmentId,
                 licenseDocument,
-                verificationStatus: 'PENDING'
+                verificationStatus: verificationResult.status
             }
         });
 
-        // We specifically DO NOT update the user.role here. 
-        // Admin must verify the documents first.
+        // Automatically update the user's role if the application is AUTO_APPROVED
+        let userRole = session.user.role;
+        if (verificationResult.status === VERIFICATION_STATUS.AUTO_APPROVED) {
+            await prisma.user.update({
+                where: { id: session.user.id },
+                data: { role: 'doctor' }
+            });
+            userRole = 'doctor';
+        }
 
         return NextResponse.json({
             message: "Doctor application submitted for verification",
             doctor: doctor,
-            userRole: session.user.role // remains "user"
+            userRole: userRole,
+            verificationStatus: verificationResult.status,
+            verificationScore: verificationResult.score,
+            verificationReasons: verificationResult.reasons
         });
 
     } catch (e: any) {
         console.error("Onboarding Error:", e);
-        return NextResponse.json({ error: e.message || "An error occurred during onboarding" }, { status: 500 });
+        return NextResponse.json({ error: "An internal error occurred during onboarding." }, { status: 500 });
     }
 }
