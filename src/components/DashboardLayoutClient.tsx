@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Leaf, Search, Calendar, UserCircle, Briefcase, LogOut } from "lucide-react";
+import { Leaf, Search, Calendar, UserCircle, Briefcase, LogOut, Menu, X } from "lucide-react";
 
 import { useSession, signOut } from "next-auth/react";
 
@@ -13,6 +14,7 @@ export function DashboardLayoutClient({
 }) {
     const pathname = usePathname();
     const { data: session } = useSession();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const links = [
         { href: "/dashboard/ai-assistant", label: "Ayurvedic AI", icon: Leaf },
@@ -33,13 +35,24 @@ export function DashboardLayoutClient({
             <div className="absolute top-[-5%] left-[-5%] w-[600px] h-[600px] bg-emerald-100/30 rounded-full blur-[100px] pointer-events-none" />
             <div className="absolute bottom-10 left-10 w-[500px] h-[500px] bg-green-300/20 rounded-full blur-[100px] pointer-events-none" />
 
+            {/* Mobile Sidebar Overlay */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm sm:hidden"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
             {/* Sidebar Navigation */}
-            <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-[#e2efe2]/50 bg-white/40 backdrop-blur-xl sm:flex">
-                <div className="flex pt-8 pb-8 px-8">
-                    <Link href="/dashboard/ai-assistant" className="flex items-center gap-2 font-semibold text-2xl tracking-tight text-[#2E7D32]">
+            <aside className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-[#e2efe2]/50 bg-white/80 backdrop-blur-xl transition-transform duration-300 ease-in-out sm:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+                <div className="flex pt-8 pb-8 px-8 items-center justify-between">
+                    <Link href="/dashboard/ai-assistant" className="flex items-center gap-2 font-semibold text-2xl tracking-tight text-[#2E7D32]" onClick={() => setIsSidebarOpen(false)}>
                         <Leaf className="h-7 w-7" />
                         <span>Zenayura</span>
                     </Link>
+                    <button onClick={() => setIsSidebarOpen(false)} className="sm:hidden text-slate-500 hover:text-slate-800">
+                        <X className="w-5 h-5" />
+                    </button>
                 </div>
                 <div className="flex-1 overflow-auto py-2 flex flex-col px-4 relative z-10">
                     <nav className="grid items-start text-[15px] font-medium gap-1.5">
@@ -50,6 +63,7 @@ export function DashboardLayoutClient({
                                 <Link
                                     key={link.href}
                                     href={link.href}
+                                    onClick={() => setIsSidebarOpen(false)}
                                     className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-all ${isActive
                                         ? "bg-[#598b61] backdrop-blur-md shadow-sm text-white hover:bg-[#4b7752]"
                                         : "text-slate-500 hover:text-[#2E7D32] hover:bg-[#eaf4ea]/60"
@@ -86,9 +100,17 @@ export function DashboardLayoutClient({
             {/* Main Content Area */}
             <div className="relative flex flex-col sm:pl-64 w-full z-10">
                 {/* Mobile Header */}
-                <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-[#e2efe2] bg-white/80 backdrop-blur-md px-4 sm:hidden justify-between">
-                    <div className="font-semibold text-lg flex items-center gap-2 text-[#2E7D32]">
-                        <Leaf className="w-5 h-5" /> Zenayura
+                <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-[#e2efe2] bg-white/80 backdrop-blur-md px-4 sm:hidden justify-between">
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setIsSidebarOpen(true)}
+                            className="p-1 -ml-1 text-[#2E7D32] hover:bg-slate-100 rounded-md transition-colors"
+                        >
+                            <Menu className="w-6 h-6" />
+                        </button>
+                        <div className="font-semibold text-lg flex items-center gap-2 text-[#2E7D32]">
+                            <Leaf className="w-5 h-5" /> Zenayura
+                        </div>
                     </div>
                     <button
                         onClick={() => signOut({ callbackUrl: "/auth/login" })}
