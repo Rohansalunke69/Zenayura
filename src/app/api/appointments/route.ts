@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { standardRateLimit, getIP } from '@/lib/rateLimit';
+import * as Sentry from '@sentry/nextjs';
 
 export async function GET() {
     try {
@@ -19,12 +21,20 @@ export async function GET() {
         return NextResponse.json({ appointments });
     } catch (e: any) {
         console.error("Appointment GET Error:", e);
+        Sentry.captureException(e);
         return NextResponse.json({ error: "An internal error occurred" }, { status: 500 });
     }
 }
 
 export async function POST(req: Request) {
     try {
+        const ip = getIP(req);
+        try {
+            await standardRateLimit.check(req, 20, ip); // limit to 20 per IP per minute
+        } catch {
+            return NextResponse.json({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 });
+        }
+
         const session = await getServerSession(authOptions);
         if (!session || !session.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -55,6 +65,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ message: "Appointment booked successfully", appointment });
     } catch (e: any) {
         console.error("Appointment POST Error:", e);
+        Sentry.captureException(e);
         return NextResponse.json({ error: "An internal error occurred" }, { status: 500 });
     }
 }
@@ -107,6 +118,7 @@ export async function PATCH(req: Request) {
     } catch (e: any) {
         // Safe error handling, avoid exposing raw errors
         console.error("Appointment Update Error:", e);
+        Sentry.captureException(e);
         return NextResponse.json({ error: "An internal error occurred" }, { status: 500 });
     }
 }

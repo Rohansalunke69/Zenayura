@@ -1,3 +1,4 @@
+import { withSentryConfig } from '@sentry/nextjs';
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -5,4 +6,13 @@ const nextConfig: NextConfig = {
   /* config options here */
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: "zenayura",
+  project: "zenayura",
+  sentryUrl: "https://sentry.io/",
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  reactComponentAnnotation: {
+    enabled: true,
+  },
+});

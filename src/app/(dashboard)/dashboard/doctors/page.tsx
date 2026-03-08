@@ -2,7 +2,26 @@ import { prisma } from "@/lib/prisma";
 import { DoctorsClient } from "./DoctorsClient";
 
 export default async function DoctorsPage() {
-    const doctors = await prisma.doctor.findMany();
+    let doctors: any[] = [];
+    let dbError = false;
+    try {
+        doctors = await prisma.doctor.findMany();
+    } catch (error) {
+        console.error("DoctorsPage DB Error:", error);
+        dbError = true;
+    }
+
+    if (dbError) {
+        return (
+            <div className="flex flex-col h-full w-full max-w-5xl mx-auto gap-4 items-center justify-center">
+                <div className="w-16 h-16 border-4 border-[#2E7D32]/20 border-t-[#2E7D32] rounded-full animate-spin mb-6"></div>
+                <h1 className="text-2xl font-bold text-slate-800 mb-2">Connecting to Database...</h1>
+                <p className="text-slate-500 max-w-sm text-center">
+                    Our secure database is currently waking up or experiencing heavy load. Please refresh the page in a few moments.
+                </p>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col h-full w-full max-w-5xl mx-auto gap-4">

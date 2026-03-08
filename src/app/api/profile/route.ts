@@ -48,6 +48,18 @@ export async function POST(req: Request) {
             return new NextResponse("Missing required fields", { status: 400 });
         }
 
+        // --- NEW VALIDATION: Prevent Prisma P2003 Foreign Key Error ---
+        // Ensure the User ID stored in the current session actually exists in our current DB
+        const existingUser = await prisma.user.findUnique({
+            where: { id: session.user.id }
+        });
+
+        if (!existingUser) {
+            // The user session is stale (e.g. from an old database), refuse the upsert to protect the schema.
+            return new NextResponse("Invalid Session: User not found in database.", { status: 401 });
+        }
+        // --------------------------------------------------------------
+
         // Upsert the profile (in case user double-submits)
         const profile = await prisma.healthProfile.upsert({
             where: {

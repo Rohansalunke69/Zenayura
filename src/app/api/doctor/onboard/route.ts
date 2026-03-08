@@ -3,9 +3,18 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { verifyDoctorApplication, VERIFICATION_STATUS } from "@/services/doctorVerificationService";
+import { standardRateLimit, getIP } from '@/lib/rateLimit';
+import * as Sentry from '@sentry/nextjs';
 
 export async function POST(req: Request) {
     try {
+        const ip = getIP(req);
+        try {
+            await standardRateLimit.check(req, 10, ip); // limit to 10 per IP per minute
+        } catch {
+            return NextResponse.json({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 });
+        }
+
         const session = await getServerSession(authOptions);
         if (!session || !session.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -93,6 +102,7 @@ export async function POST(req: Request) {
 
     } catch (e: any) {
         console.error("Onboarding Error:", e);
+        Sentry.captureException(e);
         return NextResponse.json({ error: "An internal error occurred during onboarding." }, { status: 500 });
     }
 }

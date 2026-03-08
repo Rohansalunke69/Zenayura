@@ -1,9 +1,18 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { standardRateLimit, getIP } from '@/lib/rateLimit';
+import * as Sentry from '@sentry/nextjs';
 
 export async function POST(req: Request) {
     try {
+        const ip = getIP(req);
+        try {
+            await standardRateLimit.check(req, 5, ip); // limit to 5 per IP per minute
+        } catch {
+            return NextResponse.json({ message: 'Rate limit exceeded. Try again later.' }, { status: 429 });
+        }
+
         const { name, email, password } = await req.json();
 
         // 1. Basic Validation
@@ -57,6 +66,7 @@ export async function POST(req: Request) {
 
     } catch (error) {
         console.error('Registration Error:', error);
+        Sentry.captureException(error);
         return NextResponse.json(
             { message: 'Internal server error during registration' },
             { status: 500 }
